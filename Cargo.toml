@@ -1,0 +1,23 @@
+[package]
+name = "egui_cameras"
+version = "0.0.1"
+edition = "2021"
+authors = ["Sergio Ribera <sergioribera@rustlang-es.org>"]
+description = "Use cameras with egui"
+keywords = ["camera", "egui", "web", "gui"]
+categories = ["web-programming", "development-tools"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SergioRibera/egui_cameras"
+homepage = "https://github.com/SergioRibera/egui_cameras"
+readme = "README.md"
+exclude = ["examples"]
+
+[features]
+default = []
+
+[dependencies]
+egui = "0.29"
+nokhwa = { version = "0.10", features = ["input-native", "output-threaded"] }
+
+[dev-dependencies]
+eframe = "0.29"
