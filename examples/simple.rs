@@ -72,6 +72,10 @@ impl MainApp {
         self.available_resolutions = self
             .camera_manager
             .available_resolutions(self.selected_format.clone());
+        self.available_resolutions
+            .sort_by(|(res_a, _), (res_b, _)| {
+                (res_a.width() * res_a.height()).cmp(&(res_b.width() * res_b.height()))
+            });
         self.selected_res = self
             .available_resolutions
             .first()
