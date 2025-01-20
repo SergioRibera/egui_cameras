@@ -49,19 +49,43 @@ impl CameraManager {
 
     pub fn set_resolution(&mut self, resolution: Resolution) {
         if let Some(cam) = self.selected_camera.as_mut() {
+            if self.running {
+                cam.stop_stream().unwrap();
+            }
             cam.set_resolution(resolution).unwrap();
+            if self.running {
+                cam.open_stream().unwrap_or_else(|e| {
+                    eprintln!("Error open camera: {:?}", e);
+                });
+            }
         }
     }
 
     pub fn set_framerate(&mut self, framerate: u32) {
         if let Some(cam) = self.selected_camera.as_mut() {
+            if self.running {
+                cam.stop_stream().unwrap();
+            }
             cam.set_frame_rate(framerate).unwrap();
+            if self.running {
+                cam.open_stream().unwrap_or_else(|e| {
+                    eprintln!("Error open camera: {:?}", e);
+                });
+            }
         }
     }
 
     pub fn set_frameformat(&mut self, frameformat: FrameFormat) {
         if let Some(cam) = self.selected_camera.as_mut() {
+            if self.running {
+                cam.stop_stream().unwrap();
+            }
             cam.set_frame_format(frameformat).unwrap();
+            if self.running {
+                cam.open_stream().unwrap_or_else(|e| {
+                    eprintln!("Error open camera: {:?}", e);
+                });
+            }
         }
     }
 
