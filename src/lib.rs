@@ -1,7 +1,9 @@
 use egui::mutex::Mutex;
 use egui::{TextureHandle, TextureOptions};
 use nokhwa::pixel_format::RgbAFormat;
-use nokhwa::utils::{ApiBackend, CameraInfo, RequestedFormat, RequestedFormatType};
+use nokhwa::utils::{
+    ApiBackend, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, Resolution,
+};
 use nokhwa::{nokhwa_initialize, query, CallbackCamera};
 
 use utils::remove_duplicates_by;
@@ -37,15 +39,46 @@ impl CameraManager {
     }
 
     pub fn select_camera(&mut self, camera: Option<CameraInfo>) {
+        self.stop();
         self.selected_camera_info = camera;
     }
 
-    pub fn available_cameras(&self) -> &[CameraInfo] {
-        &self.available_cameras
+    pub fn available_cameras(&self) -> Vec<CameraInfo> {
+        self.available_cameras.clone()
+    }
+
+    pub fn set_resolution(&mut self, resolution: Resolution) {
+        if let Some(cam) = self.selected_camera.as_mut() {
+            cam.set_resolution(resolution).unwrap();
+        }
+    }
+
+    pub fn set_framerate(&mut self, framerate: u32) {
+        if let Some(cam) = self.selected_camera.as_mut() {
+            cam.set_frame_rate(framerate).unwrap();
+        }
+    }
+
+    pub fn set_frameformat(&mut self, frameformat: FrameFormat) {
+        if let Some(cam) = self.selected_camera.as_mut() {
+            cam.set_frame_format(frameformat).unwrap();
+        }
     }
 
     pub fn is_running(&self) -> bool {
         self.running
+    }
+
+    pub fn available_resolutions(&mut self, format: FrameFormat) -> Vec<(Resolution, Vec<u32>)> {
+        self.selected_camera
+            .as_mut()
+            .map(|cam| {
+                cam.compatible_list_by_resolution(format)
+                    .map(|h| h.into_iter().collect::<Vec<(_, _)>>())
+                    .ok()
+            })
+            .flatten()
+            .unwrap_or_default()
     }
 
     pub fn stop(&mut self) {
@@ -92,7 +125,7 @@ impl CameraManager {
         let Some(camera) = self.selected_camera.as_mut() else {
             return false;
         };
-        let Ok(buffer) = camera.last_frame() else {
+        let Ok(buffer) = camera.poll_frame() else {
             return false;
         };
         let format = buffer.source_frame_format();
