@@ -24,19 +24,28 @@
           sha256 = "sha256-yMuSb5eQPO/bHv+Bcf/US8LVMbf/G/0MSfiPwBhiPpk=";
         };
         craneLib = crane.overrideToolchain toolchain;
+        envs = {
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
+          CPATH = "${pkgs.lib.makeSearchPathOutput "dev" "include" buildInputs}";
+        };
 
         buildInputs = with pkgs; [
           openssl.dev
           pkg-config
           wayland
 
-          linuxHeaders
           libv4l
+          libgphoto2
+          mozjpeg
+
+          linuxHeaders
+
+          gcc
           glibc.dev
         ];
 
         nativeBuildInputs = [
-          pkgs.llvmPackages_16.libstdcxxClang
+          pkgs.llvmPackages_latest.libstdcxxClang
           pkgs.clang-tools
         ];
 
@@ -44,9 +53,6 @@
           doCheck = false;
           src = craneLib.path ./.;
           inherit buildInputs nativeBuildInputs;
-
-          LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-          # CPATH = pkgs.lib.makeSearchPathOutput "dev" "include" buildInputs;
         };
 
         libraries = with pkgs; [
@@ -57,12 +63,15 @@
           xorg.libXcursor
           xorg.libXi
           xorg.libXrandr
+
+          libclang
+          glibc
         ];
         # Compile all artifacts
         appDeps = craneLib.buildDepsOnly commonArgs;
 
         # Compile
-        app = craneLib.buildPackage (commonArgs // {
+        app = craneLib.buildPackage (commonArgs // envs // {
           cargoArtifacts = appDeps;
         });
       in {
@@ -75,18 +84,14 @@
         };
 
         # nix develop
-        devShells.default = craneLib.devShell {
+        devShells.default = craneLib.devShell ({
           inherit buildInputs nativeBuildInputs;
 
           packages = with pkgs; [
             toolchain
             heaptrack
           ];
-
-          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
-          LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-          CPATH = pkgs.lib.makeSearchPathOutput "dev" "include" buildInputs;
-        };
+        } // envs);
       }
     ));
 }
